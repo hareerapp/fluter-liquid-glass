@@ -11,7 +11,7 @@ components.
 |---|---|
 | iOS 26+ | Real native glass (`UIGlassEffect`, `UIGlassContainerEffect`) |
 | macOS 26+ | Real native glass (`NSGlassEffectView`, `NSGlassEffectContainerView`) |
-| iOS 15–25 / macOS 10.15–15 | Native system material blur |
+| iOS 15–25 / macOS 10.15–15 | Treated like Android: your widget as-is, or the optional frosted blur (no native views) |
 | Android, web, Windows, Linux | Installs and runs without errors; your widget as-is, or an optional frosted blur |
 
 > **New in 0.2.0:** [`LiquidGlassSvg`](#liquidglasssvg--glass-in-the-shape-of-any-svg),
@@ -21,7 +21,7 @@ components.
 
 ```yaml
 dependencies:
-  liquid_design: ^0.2.0
+  liquid_design: ^0.2.1
 ```
 
 ```dart
@@ -138,8 +138,11 @@ follows the artwork exactly: not a circle, not a capsule, the real shape.
 | Platform | What `LiquidGlassSvg` shows |
 |---|---|
 | iOS 26+ / macOS 26+ | Native Liquid Glass cut to the SVG outline (SwiftUI `glassEffect(in:)`) |
-| iOS 15–25 / macOS 10.15–15 | Native system blur masked to the outline |
+| iOS 15–25 / macOS 10.15–15 | Same as Android: the normal SVG |
 | Android, web, Windows, Linux | **The normal SVG**, drawn with its own colours (or Flutter glass with `fallback: frosted`) |
+
+Native glass is used only where the system has Liquid Glass (iOS / macOS 26+).
+Everywhere else the package steps aside, exactly as on Android.
 
 The rectangular platform view is never visible: the glass and its shadow are
 masked to the outline, including during light / dark switches.
@@ -484,9 +487,9 @@ flutter drive --driver=test_driver/integration_test.dart --target=integration_te
 
 ## Notes
 
-- On iOS 15–25 / macOS before 26 (material blur, not Liquid Glass),
-  `opacity` below 1 and the lens fade may make the blur drop out: Apple's
-  visual effect views do not support partial transparency there.
+- On iOS 15–25 / macOS before 26 there is no Liquid Glass, so the package
+  behaves like Android: no native views, your widgets as-is (or Flutter glass
+  with `fallback: LiquidGlassFallback.frosted`).
 - `example/integration_test/feature_test.dart` walks through every feature
   on a device or simulator.
 

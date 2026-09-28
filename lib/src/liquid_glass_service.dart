@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -33,10 +35,48 @@ class LiquidGlassService extends ChangeNotifier {
 
   static const _channel = MethodChannel('liquid_design');
 
-  static bool get isNativePlatform =>
+  static bool get isApplePlatform =>
       !kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.iOS ||
           defaultTargetPlatform == TargetPlatform.macOS);
+
+  static const liquidGlassMajorVersion = 26;
+
+  @visibleForTesting
+  static int? debugOsMajorVersion;
+
+  static final (String, int?)? _host = kIsWeb
+      ? null
+      : (
+          Platform.operatingSystem,
+          _parseMajor(Platform.operatingSystemVersion),
+        );
+
+  static int? _parseMajor(String version) {
+    final match = RegExp(r'(\d+)(?:\.\d+)').firstMatch(version);
+    return match == null ? null : int.tryParse(match.group(1)!);
+  }
+
+  static int? get osMajorVersion {
+    final override = debugOsMajorVersion;
+    if (override != null) return override;
+    final host = _host;
+    if (host == null) return null;
+    final target = switch (defaultTargetPlatform) {
+      TargetPlatform.iOS => 'ios',
+      TargetPlatform.macOS => 'macos',
+      _ => null,
+    };
+    return host.$1 == target ? host.$2 : null;
+  }
+
+  static bool get isNativePlatform {
+    if (!isApplePlatform) return false;
+    final service = instance;
+    if (service._capabilitiesLoaded) return service._capabilities.liquidGlass;
+    final major = osMajorVersion;
+    return major == null || major >= liquidGlassMajorVersion;
+  }
 
   static bool isGlassVisible(LiquidGlassSettings settings) =>
       settings.enabled &&
@@ -70,15 +110,23 @@ class LiquidGlassService extends ChangeNotifier {
 
   LiquidGlassSettings _settings = const LiquidGlassSettings();
   LiquidGlassCapabilities _capabilities = LiquidGlassCapabilities.none;
+  bool _capabilitiesLoaded = false;
   Future<LiquidGlassCapabilities>? _capabilitiesFuture;
 
   LiquidGlassCapabilities get capabilities => _capabilities;
 
   bool get isLiquidGlassSupported => _capabilities.liquidGlass;
 
+  @visibleForTesting
+  void debugSetCapabilities(LiquidGlassCapabilities? capabilities) {
+    _capabilities = capabilities ?? LiquidGlassCapabilities.none;
+    _capabilitiesLoaded = capabilities != null;
+    notifyListeners();
+  }
+
   Future<LiquidGlassCapabilities> ensureInitialized() {
     return _capabilitiesFuture ??= () async {
-      if (!isNativePlatform) return LiquidGlassCapabilities.none;
+      if (!isApplePlatform) return LiquidGlassCapabilities.none;
       try {
         final map = await _channel.invokeMapMethod<String, Object?>(
           'getCapabilities',
@@ -88,6 +136,7 @@ class LiquidGlassService extends ChangeNotifier {
           osVersion: map?['osVersion'] as String?,
           reduceTransparency: map?['reduceTransparency'] == true,
         );
+        _capabilitiesLoaded = map != null;
         notifyListeners();
       } on MissingPluginException catch (_) {
       } on PlatformException catch (_) {}
