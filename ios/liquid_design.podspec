@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'liquid_design'
-  s.version          = '0.2.1'
+  s.version          = '0.3.0'
   s.summary          = 'iOS 26 Liquid Glass for Flutter widgets.'
   s.description      = <<-DESC
 Native iOS 26 / macOS 26 Liquid Glass for any Flutter widget, with

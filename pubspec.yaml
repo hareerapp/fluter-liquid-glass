@@ -1,6 +1,6 @@
 name: liquid_design
 description: "iOS 26 Liquid Glass for any Flutter widget. Native glass on iOS; safe on Android, web and desktop."
-version: 0.2.1
+version: 0.3.0
 homepage: https://github.com/hareerapp/fluter-liquid-glass
 repository: https://github.com/hareerapp/fluter-liquid-glass
 issue_tracker: https://github.com/hareerapp/fluter-liquid-glass/issues
@@ -12,6 +12,20 @@ topics:
   - svg
 
 screenshots:
+  - description: 'Navigation bar with icons and labels.'
+    path: doc/screenshots/nav_labels.png
+  - description: 'Buttons: glass, tinted, prominent and icon.'
+    path: doc/screenshots/buttons.png
+  - description: 'Glass shapes: capsule, circle, rounded, rect and SVG.'
+    path: doc/screenshots/shapes.png
+  - description: 'Glass group: shapes melting together.'
+    path: doc/screenshots/group.png
+  - description: 'Switch and slider.'
+    path: doc/screenshots/controls.png
+  - description: 'Glass bottom sheet.'
+    path: doc/screenshots/sheet.png
+  - description: 'Navigation bar in dark mode.'
+    path: doc/screenshots/nav_dark.png
   - description: 'LiquidGlassSvg: native Liquid Glass in the shape of an SVG logo, light mode.'
     path: doc/screenshots/svg_light.png
   - description: 'LiquidGlassSvg: native Liquid Glass in the shape of an SVG logo, dark mode.'

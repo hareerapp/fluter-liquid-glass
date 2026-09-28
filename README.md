@@ -7,6 +7,9 @@ components.
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
 [![Instagram](https://img.shields.io/badge/@m9__6m-E4405F?style=flat-square&logo=instagram&logoColor=white)](https://instagram.com/m9_6m)
 
+<p align="center"><img src="https://raw.githubusercontent.com/hareerapp/fluter-liquid-glass/main/doc/readme/nav_labels.png" width="600" alt="Liquid Glass navigation bar"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/hareerapp/fluter-liquid-glass/main/doc/readme/shapes.png" width="600" alt="Liquid Glass shapes"></p>
+
 | Platform | What you get |
 |---|---|
 | iOS 26+ | Real native glass (`UIGlassEffect`, `UIGlassContainerEffect`) |
@@ -14,14 +17,15 @@ components.
 | iOS 15–25 / macOS 10.15–15 | Treated like Android: your widget as-is, or the optional frosted blur (no native views) |
 | Android, web, Windows, Linux | Installs and runs without errors; your widget as-is, or an optional frosted blur |
 
-> **New in 0.2.0:** [`LiquidGlassSvg`](#liquidglasssvg--glass-in-the-shape-of-any-svg),
-> Liquid Glass in the exact shape of any SVG, such as your logo.
+> **New in 0.3.0:** a picture and a short example for every component
+> below. **0.2.x:** [`LiquidGlassSvg`](#liquidglasssvg--glass-in-the-shape-of-any-svg),
+> glass in the exact shape of any SVG, and older iOS / macOS behave like Android.
 
 ## Install
 
 ```yaml
 dependencies:
-  liquid_design: ^0.2.1
+  liquid_design: ^0.3.0
 ```
 
 ```dart
@@ -62,6 +66,29 @@ parameters as `LiquidGlass`:
 ```dart
 const Icon(Icons.add).liquidGlass(shape: const LiquidGlassShape.circle())
 Text('Clear').liquidGlass(style: LiquidGlassStyle.clear, tintColor: Colors.blue)
+```
+
+### Shapes
+
+<p align="center"><img src="https://raw.githubusercontent.com/hareerapp/fluter-liquid-glass/main/doc/readme/shapes.png" width="600" alt="Capsule, circle, rounded, rect, star and SVG logo glass shapes"></p>
+
+```dart
+LiquidGlass(shape: const LiquidGlassShape.capsule(), child: label)       // default
+LiquidGlass(shape: const LiquidGlassShape.circle(), child: icon)
+LiquidGlass(shape: const LiquidGlassShape.roundedRect(16), child: card)
+LiquidGlass(shape: const LiquidGlassShape.rect(), child: banner)
+LiquidGlass(shape: LiquidGlassShape.svg(starSvg), child: box)            // any SVG
+LiquidGlassSvg.asset('assets/logo.svg', height: 80)                      // SVG widget
+```
+
+### Styles
+
+<p align="center"><img src="https://raw.githubusercontent.com/hareerapp/fluter-liquid-glass/main/doc/readme/styles.png" width="600" alt="Regular, clear and tinted glass"></p>
+
+```dart
+LiquidGlass(child: card)                                                 // regular
+LiquidGlass(style: LiquidGlassStyle.clear, child: card)                 // clear
+LiquidGlass(tintColor: Colors.blue, tintOpacity: 0.4, child: card)      // tinted
 ```
 
 ## LiquidGlassSettings — every setting in one object
@@ -267,21 +294,75 @@ merged into one outline. No extra dependency: the parser is built in.
 
 ## Components
 
-```dart
-LiquidGlassButton(onPressed: save, child: const Text('Save'))
-LiquidGlassButton(style: LiquidGlassButtonStyle.prominent, onPressed: buy, child: const Text('Buy'))
-LiquidGlassButton.icon(onPressed: share, icon: const Icon(Icons.ios_share))
+Ready-made iOS 26 controls. Each one works with the same settings as
+`LiquidGlass` (`settings:`, `LiquidGlassTheme`, `LiquidGlassService`).
 
+| Component | Widget |
+|---|---|
+| [Buttons](#buttons) | `LiquidGlassButton`, `LiquidGlassButton.icon` |
+| [Segmented control](#segmented-control) | `LiquidGlassSegmentedControl` |
+| [Switch and slider](#switch-and-slider) | `LiquidGlassSwitch`, `LiquidGlassSlider` |
+| [Search bar](#search-bar) | `LiquidGlassSearchBar` |
+| [Bottom sheet](#bottom-sheet) | `showLiquidGlassBottomSheet`, `LiquidGlassSheet` |
+| [Navigation bar](#navigation-bar) | `LiquidGlassNavigationBar` |
+| [App bar](#app-bar) | `LiquidGlassAppBar` |
+
+### Buttons
+
+<p align="center"><img src="https://raw.githubusercontent.com/hareerapp/fluter-liquid-glass/main/doc/readme/buttons.png" width="600" alt="Glass, tinted and prominent buttons"></p>
+
+Three styles, as text or icon buttons:
+
+```dart
+LiquidGlassButton(onPressed: save, child: const Text('Glass'))
+
+LiquidGlassButton(
+  style: LiquidGlassButtonStyle.tinted,
+  onPressed: save,
+  child: const Text('Tinted'),
+)
+
+LiquidGlassButton(
+  style: LiquidGlassButtonStyle.prominent,
+  onPressed: buy,
+  child: const Text('Prominent'),
+)
+
+LiquidGlassButton.icon(onPressed: share, icon: const Icon(Icons.ios_share_rounded))
+```
+
+`color` and `foregroundColor` change the colours, `shape` the outline
+(capsule by default), and `onLongPress` adds a long press.
+
+### Segmented control
+
+<p align="center"><img src="https://raw.githubusercontent.com/hareerapp/fluter-liquid-glass/main/doc/readme/segmented.png" width="600" alt="Segmented control with a glass selection"></p>
+
+```dart
 LiquidGlassSegmentedControl<String>(
   value: period,
   onValueChanged: (v) => setState(() => period = v),
-  children: const {'d': Text('Day'), 'w': Text('Week'), 'm': Text('Month')},
+  children: const {
+    'd': Text('Day'),
+    'w': Text('Week'),
+    'm': Text('Month'),
+    'y': Text('Year'),
+  },
 )
+```
 
+### Switch and slider
+
+<p align="center"><img src="https://raw.githubusercontent.com/hareerapp/fluter-liquid-glass/main/doc/readme/controls.png" width="600" alt="Glass switches and slider"></p>
+
+```dart
 LiquidGlassSwitch(value: on, onChanged: (v) => setState(() => on = v))
-LiquidGlassSlider(value: volume, onChanged: (v) => setState(() => volume = v))
-LiquidGlassSearchBar(onSubmitted: search)
-showLiquidGlassBottomSheet(context: context, builder: (_) => const MyMenu());
+
+LiquidGlassSlider(
+  value: volume,
+  onChanged: (v) => setState(() => volume = v),
+  divisions: 10, // optional
+)
 ```
 
 Switch, slider and segmented thumbs lift into a glass lens while touched.
@@ -291,45 +372,145 @@ A sideways swipe or a tap changes it. Dragging past either end pulls the
 lens a little beyond the edge, with a rubber-band feel, and it springs back
 on release. A fast slider drag stretches the lens in the direction of travel.
 
+### Search bar
+
+<p align="center"><img src="https://raw.githubusercontent.com/hareerapp/fluter-liquid-glass/main/doc/readme/search.png" width="600" alt="Glass search bar"></p>
+
+```dart
+LiquidGlassSearchBar(
+  hintText: 'Search photos',
+  onChanged: filter,
+  onSubmitted: search,
+)
+```
+
+### Bottom sheet
+
+<p align="center"><img src="https://raw.githubusercontent.com/hareerapp/fluter-liquid-glass/main/doc/readme/sheet.png" width="600" alt="Glass bottom sheet"></p>
+
+```dart
+showLiquidGlassBottomSheet(
+  context: context,
+  builder: (context) => const ShareMenu(),
+);
+```
+
+Or place a `LiquidGlassSheet(child: ...)` yourself.
+
 ### Navigation bar
+
+<p align="center"><img src="https://raw.githubusercontent.com/hareerapp/fluter-liquid-glass/main/doc/readme/nav_labels.png" width="600" alt="Glass navigation bar with icons and labels"></p>
 
 ```dart
 LiquidGlassNavigationBar(
   currentIndex: tab,
   onTap: (i) => setState(() => tab = i),
-  collapsed: collapsed,                       // optional
-  onExpand: () => setState(() => collapsed = false),
   onReselect: (i) => scrollToTop(i),          // current tab tapped again
   items: const [
     LiquidGlassNavItem(icon: Icon(Icons.home_rounded), label: 'Home'),
     LiquidGlassNavItem(icon: Icon(Icons.search_rounded), label: 'Search'),
+    LiquidGlassNavItem(icon: Icon(Icons.favorite_rounded), label: 'Saved'),
+    LiquidGlassNavItem(icon: Icon(Icons.person_rounded), label: 'Profile'),
   ],
 )
 ```
 
 The selection pill slides with a liquid stretch. Pressing lifts it into a
 glass lens that follows the finger (with haptic ticks) and snaps on release.
-To shrink the bar while scrolling, like iOS 26 (users can turn this off
-with `LiquidGlassService.instance.setCollapseOnScroll(false)`: the bar then
-stays open, and opens right away if it was collapsed):
+
+#### Icons only
+
+<p align="center"><img src="https://raw.githubusercontent.com/hareerapp/fluter-liquid-glass/main/doc/readme/nav_icons.png" width="600" alt="Navigation bar with icons only"></p>
+
+Leave out `label` and the bar gets shorter (56 instead of 64):
+
+```dart
+items: const [
+  LiquidGlassNavItem(icon: Icon(Icons.home_rounded)),
+  LiquidGlassNavItem(icon: Icon(Icons.search_rounded)),
+  LiquidGlassNavItem(icon: Icon(Icons.favorite_rounded)),
+  LiquidGlassNavItem(icon: Icon(Icons.person_rounded)),
+],
+```
+
+`activeIcon` shows a different icon for the selected tab.
+
+#### With an action button
+
+<p align="center"><img src="https://raw.githubusercontent.com/hareerapp/fluter-liquid-glass/main/doc/readme/nav_action.png" width="600" alt="Navigation bar next to a round glass action button"></p>
+
+```dart
+Row(
+  children: [
+    Expanded(child: LiquidGlassNavigationBar(/* ... */)),
+    const SizedBox(width: 12),
+    LiquidGlassButton.icon(onPressed: compose, icon: const Icon(Icons.add_rounded)),
+  ],
+)
+```
+
+#### Collapsed while scrolling
+
+<p align="center"><img src="https://raw.githubusercontent.com/hareerapp/fluter-liquid-glass/main/doc/readme/nav_collapsed.png" width="600" alt="Collapsed navigation bar showing only the current tab"></p>
+
+Like iOS 26, the bar can shrink to the current tab while the user scrolls
+down, and open again when tapped:
 
 ```dart
 LiquidGlassScrollCollapse(
   onChanged: (c) => setState(() => collapsed = c),
-  child: ListView(...),
+  child: ListView(/* ... */),
+)
+
+LiquidGlassNavigationBar(
+  collapsed: collapsed,
+  onExpand: () => setState(() => collapsed = false),
+  /* ... */
 )
 ```
 
+Users can turn this off with
+`LiquidGlassService.instance.setCollapseOnScroll(false)`: the bar then stays
+open, and opens right away if it was collapsed.
+
+#### Tinted and custom colours
+
+<p align="center"><img src="https://raw.githubusercontent.com/hareerapp/fluter-liquid-glass/main/doc/readme/nav_tinted.png" width="600" alt="Purple tinted navigation bar with white icons"></p>
+
+```dart
+LiquidGlassNavigationBar(
+  activeColor: Colors.white,
+  inactiveColor: Colors.white70,
+  settings: LiquidGlassService.instance.settings.copyWith(
+    tintColor: const Color(0xFF6A1B9A),
+    tintOpacity: 0.55,
+  ),
+  /* ... */
+)
+```
+
+#### Dark mode
+
+<p align="center"><img src="https://raw.githubusercontent.com/hareerapp/fluter-liquid-glass/main/doc/readme/nav_dark.png" width="600" alt="Navigation bar in dark mode"></p>
+
+Nothing to do: with `brightness: LiquidGlassBrightness.auto` (the default)
+the glass follows your app theme.
+
 ### App bar
+
+<p align="center"><img src="https://raw.githubusercontent.com/hareerapp/fluter-liquid-glass/main/doc/readme/app_bar.png" width="600" alt="Glass app bar with back button, title and actions"></p>
 
 ```dart
 Scaffold(
   extendBodyBehindAppBar: true,
   appBar: LiquidGlassAppBar(
     title: const Text('Inbox'),
-    actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.search))],
+    actions: [
+      IconButton(onPressed: search, icon: const Icon(Icons.search)),
+      IconButton(onPressed: more, icon: const Icon(Icons.more_horiz_rounded)),
+    ],
   ),
-  body: ListView(...),
+  body: ListView(/* ... */),
 )
 ```
 
@@ -338,12 +519,17 @@ capsule) and a scroll-edge fade once content scrolls underneath.
 
 ## Groups: morphing and performance
 
+<p align="center"><img src="https://raw.githubusercontent.com/hareerapp/fluter-liquid-glass/main/doc/readme/group.png" width="600" alt="Three glass buttons melting together in a group"></p>
+
 ```dart
 LiquidGlassGroup(
   spacing: 24,
-  child: Row(children: [
-    LiquidGlassButton.icon(onPressed: bold, icon: const Icon(Icons.format_bold)),
-    LiquidGlassButton.icon(onPressed: italic, icon: const Icon(Icons.format_italic)),
+  child: Row(mainAxisSize: MainAxisSize.min, children: [
+    LiquidGlassButton.icon(onPressed: edit, icon: const Icon(Icons.edit_rounded)),
+    const SizedBox(width: 8),
+    LiquidGlassButton.icon(onPressed: crop, icon: const Icon(Icons.crop_rounded)),
+    const SizedBox(width: 8),
+    LiquidGlassButton(onPressed: done, child: const Text('Done')),
   ]),
 )
 ```

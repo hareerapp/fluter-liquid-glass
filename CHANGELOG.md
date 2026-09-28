@@ -1,3 +1,14 @@
+## 0.3.0 — Picture guide for every component
+
+- README: a screenshot and a short example for every component: buttons
+  (glass, tinted, prominent, icon), segmented control, switch and slider,
+  search bar, bottom sheet, app bar, groups, glass shapes and styles.
+- Navigation bar gallery: icons and labels, icons only, with an action
+  button, collapsed while scrolling, tinted colours and dark mode.
+- Example: `lib/readme_shots.dart` renders every README scene, so the
+  pictures can be regenerated (`flutter run -t lib/readme_shots.dart`).
+- No API changes.
+
 ## 0.2.1 — Older iOS / macOS behave like Android
 
 - On iOS / macOS older than 26 (no Liquid Glass) the package now behaves
