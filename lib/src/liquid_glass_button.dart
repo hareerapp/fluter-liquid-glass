@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'liquid_glass.dart';
@@ -143,8 +144,7 @@ class LiquidGlassButton extends StatelessWidget {
                 interactive: _enabled,
                 tintColor: tint,
                 tintOpacity: tintOpacity,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
+                child: _DragTolerantTap(
                   onTap: onPressed,
                   onLongPress: onLongPress,
                   child: content,
@@ -154,6 +154,52 @@ class LiquidGlassButton extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _DragTolerantTap extends StatelessWidget {
+  const _DragTolerantTap({
+    required this.onTap,
+    required this.onLongPress,
+    required this.child,
+  });
+
+  static const exitDistance = 70.0;
+
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final onTap = this.onTap;
+    final onLongPress = this.onLongPress;
+    return RawGestureDetector(
+      behavior: HitTestBehavior.opaque,
+      gestures: {
+        if (onTap != null)
+          TapGestureRecognizer:
+              GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
+                () => TapGestureRecognizer(
+                  preAcceptSlopTolerance: null,
+                  postAcceptSlopTolerance: null,
+                ),
+                (recognizer) => recognizer.onTapUp = (details) {
+                  final size = context.size;
+                  if (size == null) return;
+                  final zone = (Offset.zero & size).inflate(exitDistance);
+                  if (zone.contains(details.localPosition)) onTap();
+                },
+              ),
+        if (onLongPress != null)
+          LongPressGestureRecognizer:
+              GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
+                LongPressGestureRecognizer.new,
+                (recognizer) => recognizer.onLongPress = onLongPress,
+              ),
+      },
+      child: child,
     );
   }
 }

@@ -17,15 +17,16 @@ components.
 | iOS 15–25 / macOS 10.15–15 | Treated like Android: your widget as-is, or the optional frosted blur (no native views) |
 | Android, web, Windows, Linux | Installs and runs without errors; your widget as-is, or an optional frosted blur |
 
-> **New in 0.3.0:** a picture and a short example for every component
-> below. **0.2.x:** [`LiquidGlassSvg`](#liquidglasssvg--glass-in-the-shape-of-any-svg),
+> **New in 0.4.0:** buttons press and drag like native iOS 26: the glass
+> follows the finger and stretches toward it ([Buttons](#buttons)).
+> **0.3.0:** a picture and a short example for every component below. **0.2.x:** [`LiquidGlassSvg`](#liquidglasssvg--glass-in-the-shape-of-any-svg),
 > glass in the exact shape of any SVG, and older iOS / macOS behave like Android.
 
 ## Install
 
 ```yaml
 dependencies:
-  liquid_design: ^0.3.0
+  liquid_design: ^0.4.0
 ```
 
 ```dart
@@ -333,6 +334,12 @@ LiquidGlassButton.icon(onPressed: share, icon: const Icon(Icons.ios_share_rounde
 
 `color` and `foregroundColor` change the colours, `shape` the outline
 (capsule by default), and `onLongPress` adds a long press.
+
+Press and drag like a native iOS 26 button: the glass grows under the
+finger, follows it with a rubber-band pull and stretches toward it. Letting
+go within 70 pt of the button still taps it (like `UIControl`); drag further
+and the glass springs back and the tap is cancelled. Inside a list, a
+vertical drag scrolls the list instead.
 
 ### Segmented control
 

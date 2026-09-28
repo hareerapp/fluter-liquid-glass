@@ -1,3 +1,17 @@
+## 0.4.0 — Native press and drag for glass buttons
+
+- Glass buttons now feel like iOS 26: pressing grows the glass, dragging
+  pulls it along with a rubber-band feel (up to 60% of its size, at most
+  36 pt) and stretches it toward the finger while it thins across.
+- Drag more than 70 pt away and the glass springs back and the tap is
+  cancelled; come back inside and it grabs the finger again (like
+  `UIControl`).
+- `LiquidGlassButton` taps survive small drags: releasing within 70 pt still
+  taps (before, any move over 18 px cancelled the tap).
+- Inside lists, a vertical drag still scrolls instead of tapping.
+- The follow and stretch apply to every interactive `LiquidGlass`; set
+  `interactive: false` or lower `interactionStrength` to calm it down.
+
 ## 0.3.0 — Picture guide for every component
 
 - README: a screenshot and a short example for every component: buttons
