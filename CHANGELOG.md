@@ -1,3 +1,14 @@
+## 0.2.1 — Older iOS / macOS behave like Android
+
+- On iOS / macOS older than 26 (no Liquid Glass) the package now behaves
+  exactly like Android: no native views, your widgets as-is, the plain SVG for
+  `LiquidGlassSvg`, and Flutter glass only with `fallback: frosted`.
+  Previously a native blur was shown instead.
+- Decided synchronously from the OS version (no flash on start), then
+  confirmed by the plugin capabilities.
+- New: `LiquidGlassService.isApplePlatform` and
+  `LiquidGlassService.osMajorVersion`.
+
 ## 0.2.0 — Glass in the shape of any SVG
 
 - **SVG and custom-path glass.** `LiquidGlassShape.svg(...)` and
