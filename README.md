@@ -334,6 +334,12 @@ LiquidGlassButton.icon(onPressed: share, icon: const Icon(Icons.ios_share_rounde
 `color` and `foregroundColor` change the colours, `shape` the outline
 (capsule by default), and `onLongPress` adds a long press.
 
+Press and drag like a native iOS 26 button: the glass grows under the
+finger, follows it with a rubber-band pull and stretches toward it. Letting
+go within 70 pt of the button still taps it (like `UIControl`); drag further
+and the glass springs back and the tap is cancelled. Inside a list, a
+vertical drag scrolls the list instead.
+
 ### Segmented control
 
 <p align="center"><img src="https://raw.githubusercontent.com/hareerapp/fluter-liquid-glass/main/doc/readme/segmented.png" width="600" alt="Segmented control with a glass selection"></p>

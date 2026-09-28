@@ -24,7 +24,14 @@ void main() {
           ),
         ),
       );
-      return tester.getSize(find.byType(GestureDetector).last);
+      return tester.getSize(
+        find
+            .descendant(
+              of: find.byType(LiquidGlassButton),
+              matching: find.byType(RawGestureDetector),
+            )
+            .last,
+      );
     }
 
     expect(await buttonSize(LiquidGlassFallback.frosted), const Size(300, 60));

@@ -111,7 +111,10 @@ class _LiquidGlassState extends State<LiquidGlass>
   final ValueNotifier<Offset?> _pointer = ValueNotifier(null);
   late final Listenable _motion = Listenable.merge([_press, _hover, _dx, _dy]);
 
+  static const dragExitDistance = 70.0;
+
   int? _activePointer;
+  bool _outside = false;
   Offset _downPosition = Offset.zero;
   Size _size = Size.zero;
   double _strength = 1;
@@ -172,9 +175,9 @@ class _LiquidGlassState extends State<LiquidGlass>
   }
 
   double _rubberBand(double delta, double dimension) {
-    final limit = (dimension * 0.25).clamp(6.0, 28.0) * _strength;
+    final limit = (dimension * 0.6).clamp(10.0, 36.0) * _strength;
     if (limit == 0) return 0;
-    return (1 - 1 / (delta.abs() * 0.55 / limit + 1)) * limit * delta.sign;
+    return (1 - 1 / (delta.abs() * 0.5 / limit + 1)) * limit * delta.sign;
   }
 
   void _measure() {
@@ -185,6 +188,7 @@ class _LiquidGlassState extends State<LiquidGlass>
   void _onDown(PointerDownEvent event) {
     if (_activePointer != null) return;
     _activePointer = event.pointer;
+    _outside = false;
     final scroll = _scroll;
     _scrollAtDown = scroll != null && scroll.hasPixels ? scroll.pixels : null;
     _measure();
@@ -198,7 +202,20 @@ class _LiquidGlassState extends State<LiquidGlass>
     if (event.pointer != _activePointer) return;
     final delta = event.localPosition - _downPosition;
     _pointer.value = event.localPosition;
+    final outside = !(Offset.zero & _size)
+        .inflate(dragExitDistance)
+        .contains(event.localPosition);
+    if (outside != _outside) {
+      _outside = outside;
+      _spring(_press, outside ? 0 : 1, outside ? _releaseSpring : _pressSpring);
+      _spring(_glow, outside ? 0 : 1, _fadeSpring);
+    }
     if (_reduceMotion) return;
+    if (outside) {
+      _spring(_dx, 0, _releaseSpring);
+      _spring(_dy, 0, _releaseSpring);
+      return;
+    }
     _spring(_dx, _rubberBand(delta.dx, _size.width), _followSpring);
     _spring(_dy, _rubberBand(delta.dy, _size.height), _followSpring);
   }
@@ -210,6 +227,7 @@ class _LiquidGlassState extends State<LiquidGlass>
 
   void _release() {
     _activePointer = null;
+    _outside = false;
     _scrollAtDown = null;
     _spring(_press, 0, _releaseSpring);
     _spring(_dx, 0, _releaseSpring);
@@ -366,10 +384,10 @@ class _LiquidGlassState extends State<LiquidGlass>
     final scale = 1 + _press.value * growth + _hover.value * 0.02 * _strength;
 
     final tx = _dx.value, ty = _dy.value;
-    final stretchX = tx.abs() / w * 0.5;
-    final stretchY = ty.abs() / h * 0.5;
-    final sx = scale * (1 + stretchX - stretchY * 0.5);
-    final sy = scale * (1 + stretchY - stretchX * 0.5);
+    final stretchX = (tx.abs() / w * 0.6).clamp(0.0, 0.3);
+    final stretchY = (ty.abs() / h * 0.6).clamp(0.0, 0.3);
+    final sx = scale * (1 + stretchX - stretchY * 0.45);
+    final sy = scale * (1 + stretchY - stretchX * 0.45);
 
     return Matrix4.identity()
       ..translateByDouble(w / 2 + tx, h / 2 + ty, 0, 1)
