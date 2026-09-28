@@ -32,6 +32,8 @@ class LiquidGlass extends StatefulWidget {
     this.fallbackBlurSigma,
     this.renderer,
     this.joinGroup = true,
+    this.rimColor,
+    this.rimWidth,
   });
 
   final Widget child;
@@ -53,6 +55,10 @@ class LiquidGlass extends StatefulWidget {
   final LiquidGlassRenderer? renderer;
 
   final bool joinGroup;
+
+  final Color? rimColor;
+
+  final double? rimWidth;
 
   @override
   State<LiquidGlass> createState() => _LiquidGlassState();
@@ -255,6 +261,7 @@ class _LiquidGlassState extends State<LiquidGlass>
   Widget _build(LiquidGlassSettings settings, GlassGroupHandle? group) {
     final shape =
         widget.shape ?? LiquidGlassShape.detect(widget.child) ?? settings.shape;
+    if (shape.isPath) group = null;
 
     final native = LiquidGlassService.usesNativeGlass(
       context,
@@ -283,6 +290,8 @@ class _LiquidGlassState extends State<LiquidGlass>
         shape: shape,
         settings: settings,
         brightness: _flutterBrightness(settings.brightness),
+        rimColor: widget.rimColor,
+        rimWidth: widget.rimWidth ?? 1,
         solid:
             (MediaQuery.maybeHighContrastOf(context) ?? false) ||
             LiquidGlassService.instance.capabilities.reduceTransparency,
@@ -392,7 +401,11 @@ class _GlowPainter extends CustomPainter {
 
     final rect = Offset.zero & size;
     canvas.save();
-    canvas.clipRRect(shape.toRRect(rect));
+    if (shape.isPath) {
+      canvas.clipPath(shape.toPath(rect));
+    } else {
+      canvas.clipRRect(shape.toRRect(rect));
+    }
 
     final white = const Color(0xFFFFFFFF);
     canvas.drawRect(
@@ -430,11 +443,15 @@ class FlutterGlass extends StatelessWidget {
     required this.settings,
     this.brightness,
     this.solid = false,
+    this.rimColor,
+    this.rimWidth = 1,
   });
 
   final LiquidGlassShape shape;
   final LiquidGlassSettings settings;
   final Brightness? brightness;
+  final Color? rimColor;
+  final double rimWidth;
 
   final bool solid;
 
@@ -495,16 +512,19 @@ class FlutterGlass extends StatelessWidget {
         sheen: (dark ? 0.07 : 0.22) * opacity,
         rim: (solid ? 0.9 : (dark ? 0.32 : 0.75)) * opacity,
         dark: dark,
+        rimColor: rimColor,
+        rimWidth: rimWidth,
       ),
     );
     if (sigma <= 0 || opacity <= 0) return paint;
-    return ClipRRect(
-      clipper: _ShapeClipper(shape),
-      child: BackdropFilter(
-        filter: _filter(sigma, 1 + 0.6 * opacity),
-        child: paint,
-      ),
+    final blur = BackdropFilter(
+      filter: _filter(sigma, 1 + 0.6 * opacity),
+      child: paint,
     );
+    if (shape.isPath) {
+      return ClipPath(clipper: _PathClipper(shape), child: blur);
+    }
+    return ClipRRect(clipper: _ShapeClipper(shape), child: blur);
   }
 }
 
@@ -515,6 +535,8 @@ class _GlassPainter extends CustomPainter {
     required this.sheen,
     required this.rim,
     required this.dark,
+    this.rimColor,
+    this.rimWidth = 1,
   });
 
   final LiquidGlassShape shape;
@@ -522,12 +544,18 @@ class _GlassPainter extends CustomPainter {
   final double sheen;
   final double rim;
   final bool dark;
+  final Color? rimColor;
+  final double rimWidth;
 
   static const _white = Color(0xFFFFFFFF);
 
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
+    if (shape.isPath) {
+      _paintPath(canvas, rect);
+      return;
+    }
     final rrect = shape.toRRect(rect);
     canvas.drawRRect(rrect, Paint()..color = fill);
 
@@ -567,13 +595,77 @@ class _GlassPainter extends CustomPainter {
     }
   }
 
+  void _paintPath(Canvas canvas, Rect rect) {
+    final path = shape.toPath(rect);
+    final bounds = path.getBounds();
+    if (bounds.isEmpty) return;
+    canvas.drawPath(path, Paint()..color = fill);
+
+    if (sheen > 0) {
+      canvas.drawPath(
+        path,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              _white.withValues(alpha: sheen),
+              _white.withValues(alpha: 0),
+            ],
+            stops: const [0, 0.55],
+          ).createShader(bounds),
+      );
+    }
+
+    if (rim > 0 && rimWidth > 0) {
+      final base = rimColor ?? _white;
+      final alpha = rimColor == null
+          ? rim
+          : base.a * (rim / 0.75).clamp(0.0, 1.0);
+      canvas.save();
+      canvas.clipPath(path);
+      canvas.drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = rimWidth * 2
+          ..strokeJoin = StrokeJoin.round
+          ..shader = LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              base.withValues(alpha: alpha),
+              base.withValues(alpha: alpha * (dark ? 0.2 : 0.25)),
+              base.withValues(alpha: alpha * 0.55),
+            ],
+            stops: const [0, 0.5, 1],
+          ).createShader(bounds),
+      );
+      canvas.restore();
+    }
+  }
+
   @override
   bool shouldRepaint(_GlassPainter old) =>
       old.shape != shape ||
       old.fill != fill ||
       old.sheen != sheen ||
       old.rim != rim ||
-      old.dark != dark;
+      old.dark != dark ||
+      old.rimColor != rimColor ||
+      old.rimWidth != rimWidth;
+}
+
+class _PathClipper extends CustomClipper<Path> {
+  const _PathClipper(this.shape);
+
+  final LiquidGlassShape shape;
+
+  @override
+  Path getClip(Size size) => shape.toPath(Offset.zero & size);
+
+  @override
+  bool shouldReclip(_PathClipper old) => old.shape != shape;
 }
 
 class _ShapeClipper extends CustomClipper<RRect> {
@@ -605,6 +697,8 @@ extension LiquidGlassExtension on Widget {
     double? fallbackBlurSigma,
     LiquidGlassRenderer? renderer,
     bool joinGroup = true,
+    Color? rimColor,
+    double? rimWidth,
   }) => LiquidGlass(
     key: key,
     shape: shape,
@@ -621,6 +715,8 @@ extension LiquidGlassExtension on Widget {
     fallbackBlurSigma: fallbackBlurSigma,
     renderer: renderer,
     joinGroup: joinGroup,
+    rimColor: rimColor,
+    rimWidth: rimWidth,
     child: this,
   );
 }

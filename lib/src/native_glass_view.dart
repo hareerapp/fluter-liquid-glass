@@ -43,9 +43,25 @@ class _NativePlatformGlassState extends State<NativePlatformGlass> {
 
   void _sync() {
     final channel = _channel;
-    if (channel == null || mapEquals(_sentParams, widget.params)) return;
+    if (channel == null || _sameParams(_sentParams, widget.params)) return;
     _sentParams = widget.params;
     channel.invokeMethod<void>('update', widget.params).catchError((_) {});
+  }
+
+  static bool _sameParams(Map<String, Object?> a, Map<String, Object?> b) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    for (final entry in a.entries) {
+      if (!b.containsKey(entry.key)) return false;
+      final other = b[entry.key];
+      final value = entry.value;
+      if (value is List && other is List) {
+        if (!listEquals(value, other)) return false;
+      } else if (value != other) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @override

@@ -14,11 +14,14 @@ components.
 | iOS 15–25 / macOS 10.15–15 | Native system material blur |
 | Android, web, Windows, Linux | Installs and runs without errors; your widget as-is, or an optional frosted blur |
 
+> **New in 0.2.0:** [`LiquidGlassSvg`](#liquidglasssvg--glass-in-the-shape-of-any-svg),
+> Liquid Glass in the exact shape of any SVG, such as your logo.
+
 ## Install
 
 ```yaml
 dependencies:
-  liquid_design: ^0.1.0
+  liquid_design: ^0.2.0
 ```
 
 ```dart
@@ -121,6 +124,143 @@ widget's own values → its `settings:` → the nearest `LiquidGlassTheme` →
 | `fallbackBlurSigma` | `double` | `18` | Blur of Flutter-drawn glass (0 = no blur) |
 | `collapseOnScroll` | `bool` | `true` | Navigation bar shrinks while scrolling down |
 | `renderer` | `LiquidGlassRenderer` | `native` | `native` system glass, or `flutter` / `auto` Flutter-drawn glass |
+
+## LiquidGlassSvg — glass in the shape of any SVG
+
+Turn a logo, an icon or any SVG into a Liquid Glass surface whose outline
+follows the artwork exactly: not a circle, not a capsule, the real shape.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/hareerapp/fluter-liquid-glass/main/doc/screenshots/svg_logo_light.png" width="49%" alt="SVG logo as Liquid Glass, light mode">
+  <img src="https://raw.githubusercontent.com/hareerapp/fluter-liquid-glass/main/doc/screenshots/svg_logo_dark.png" width="49%" alt="SVG logo as Liquid Glass, dark mode">
+</p>
+
+| Platform | What `LiquidGlassSvg` shows |
+|---|---|
+| iOS 26+ / macOS 26+ | Native Liquid Glass cut to the SVG outline (SwiftUI `glassEffect(in:)`) |
+| iOS 15–25 / macOS 10.15–15 | Native system blur masked to the outline |
+| Android, web, Windows, Linux | **The normal SVG**, drawn with its own colours (or Flutter glass with `fallback: frosted`) |
+
+The rectangular platform view is never visible: the glass and its shadow are
+masked to the outline, including during light / dark switches.
+
+### From an asset
+
+```yaml
+flutter:
+  assets:
+    - assets/logo.svg
+```
+
+```dart
+LiquidGlassSvg.asset(
+  'assets/logo.svg',
+  height: 40,                        // width follows the SVG aspect ratio
+  tintColor: const Color(0xFF3E205A),
+  tintOpacity: 0.35,
+  semanticLabel: 'Hareer',
+)
+```
+
+The file is loaded once and cached, so rebuilds never flash.
+
+### From a string
+
+A full SVG document:
+
+```dart
+const star = '''
+<svg viewBox="0 0 24 24">
+  <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02
+                   12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+</svg>''';
+
+LiquidGlassSvg(svg: star, width: 96, tintColor: Colors.amber)
+```
+
+Or only the path data (`d`):
+
+```dart
+LiquidGlassSvg(
+  svg: 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3'
+      'c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 '
+      '22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z',
+  width: 96,
+)
+```
+
+### Tap, press and content inside the shape
+
+```dart
+LiquidGlassSvg.asset(
+  'assets/logo.svg',
+  height: 110,
+  interactive: true,                 // grows and stretches under the finger
+  onTap: () => openHome(),           // only taps inside the outline count
+  color: Colors.white,               // plain-SVG colour on Android / web
+  child: const Center(child: Text('Hi')), // clipped to the outline
+)
+```
+
+### Stroke-only artwork
+
+Line icons with `fill="none"` and a `stroke` are turned into a filled
+outline, so the glass has the width of the stroke:
+
+```dart
+LiquidGlassSvg(svg: waveIcon, width: 130)                     // strokeToFill: true
+LiquidGlassSvg(svg: waveIcon, width: 130, strokeToFill: false) // raw path as fill
+```
+
+### As a shape for LiquidGlass
+
+`LiquidGlassShape.svg` and `LiquidGlassShape.path` work anywhere a shape is
+accepted:
+
+```dart
+LiquidGlass(
+  shape: LiquidGlassShape.svg(starSvg),
+  child: const SizedBox(width: 100, height: 100),
+)
+
+const SizedBox(width: 110, height: 90).liquidGlass(
+  shape: LiquidGlassShape.path(
+    Path()
+      ..moveTo(0, 50)
+      ..quadraticBezierTo(50, -20, 100, 50)
+      ..quadraticBezierTo(50, 120, 0, 50)
+      ..close(),
+  ),
+)
+```
+
+### Parameters
+
+| Parameter | Type | Default | What it does |
+|---|---|---|---|
+| `svg` / `assetName` | `String` | required | SVG document, path data, or an asset path (`.asset`) |
+| `width`, `height` | `double?` | SVG size | Give one and the other follows the aspect ratio |
+| `fit` | `BoxFit` | `contain` | How the artwork fits the box |
+| `alignment` | `Alignment` | `center` | Where the artwork sits in the box |
+| `tintColor` | `Color?` | settings | Coloured glass, e.g. your brand colour |
+| `tintOpacity` | `double?` | settings | Strength of the tint (0–1) |
+| `color` | `Color?` | `null` | Paints the plain SVG in one colour (non-glass platforms) |
+| `rimColor`, `rimWidth` | `Color?`, `double` | white, `1.0` | Edge highlight of Flutter-drawn glass |
+| `strokeToFill` | `bool` | `true` | Outline stroke-only artwork |
+| `settings` | `LiquidGlassSettings?` | theme / service | Per-widget glass settings |
+| `interactive` | `bool` | `false` | Press / drag motion |
+| `onTap` | `VoidCallback?` | `null` | Tap inside the outline |
+| `semanticLabel` | `String?` | `null` | Screen-reader label |
+| `child` | `Widget?` | `null` | Content drawn inside the shape (clipped) |
+| `bundle` | `AssetBundle?` | `DefaultAssetBundle` | Bundle for `.asset` |
+
+### Supported SVG
+
+`path` (every command, arcs included), `rect` (rounded), `circle`,
+`ellipse`, `line`, `polyline`, `polygon`, nested `g` / `svg`, `transform`,
+`viewBox`, presentation attributes, `style=""`, `<style>` CSS classes,
+`fill-rule`, opacity, and linear / radial gradients. Several shapes are
+merged into one outline. No extra dependency: the parser is built in.
 
 ## Components
 

@@ -1,3 +1,18 @@
+## 0.2.0 — Glass in the shape of any SVG
+
+- **SVG and custom-path glass.** `LiquidGlassShape.svg(...)` and
+  `LiquidGlassShape.path(...)` give glass any outline: a full SVG document or
+  raw path data (`d`). Stroke-only artwork is outlined (`strokeToFill`).
+- **`LiquidGlassSvg`** widget, from a string or with `LiquidGlassSvg.asset(...)`.
+  Native Liquid Glass shaped like the SVG on iOS / macOS 26 (SwiftUI
+  `glassEffect(in:)`, masked to the outline so the rectangular bounds never
+  show). On other platforms it draws the plain SVG, or Flutter glass with
+  `fallback: frosted`. Taps only land inside the outline.
+- `LiquidGlass` / `.liquidGlass()` accept `rimColor` and `rimWidth` for the
+  Flutter renderer.
+- No new dependencies; the SVG parser is built in. Existing shapes send
+  exactly the same data to native as before.
+
 ## 0.1.0 — First release ✨
 
 **iOS 26 Liquid Glass for any Flutter widget.** Real native glass on
