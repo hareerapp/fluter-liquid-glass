@@ -11,4 +11,5 @@ export 'src/liquid_glass_service.dart';
 export 'src/liquid_glass_settings.dart';
 export 'src/liquid_glass_shape.dart';
 export 'src/liquid_glass_sheet.dart';
+export 'src/liquid_glass_svg.dart';
 export 'src/liquid_glass_theme.dart';

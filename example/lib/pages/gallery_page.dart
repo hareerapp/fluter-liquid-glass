@@ -4,6 +4,7 @@ import 'package:liquid_design/liquid_design.dart';
 import '../common.dart';
 import 'overrides_page.dart';
 import 'shapes_page.dart';
+import 'svg_page.dart';
 
 /// Shapes, per-widget overrides and LiquidGlassTheme.
 class GalleryPage extends StatefulWidget {
@@ -25,14 +26,16 @@ class _GalleryPageState extends State<GalleryPage> {
           onValueChanged: (v) => setState(() => _tab = v),
           children: const {
             0: Text('Shapes'),
-            1: Text('Overrides'),
-            2: Text('Theme'),
+            1: Text('SVG'),
+            2: Text('Overrides'),
+            3: Text('Theme'),
           },
         ),
         const SizedBox(height: 20),
         switch (_tab) {
           0 => const ShapesPage(),
-          1 => const OverridesPage(),
+          1 => const SvgPage(),
+          2 => const OverridesPage(),
           _ => const _ThemeDemo(),
         },
       ],

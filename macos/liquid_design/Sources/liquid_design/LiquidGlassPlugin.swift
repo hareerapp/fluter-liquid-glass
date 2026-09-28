@@ -1,5 +1,6 @@
 import AppKit
 import FlutterMacOS
+import SwiftUI
 
 public class LiquidGlassPlugin: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {
@@ -85,11 +86,111 @@ private func number(_ value: Any?) -> CGFloat? {
   (value as? NSNumber).map { CGFloat($0.doubleValue) }
 }
 
+struct LiquidGlassPathGeometry: Equatable, Sendable {
+  static let empty = LiquidGlassPathGeometry(
+    commands: [], evenOdd: false, fit: "contain", alignX: 0, alignY: 0, viewBox: .zero)
+
+  var commands: [CGFloat]
+  var evenOdd: Bool
+  var fit: String
+  var alignX: CGFloat
+  var alignY: CGFloat
+  var viewBox: CGSize
+
+  init(
+    commands: [CGFloat], evenOdd: Bool, fit: String, alignX: CGFloat, alignY: CGFloat,
+    viewBox: CGSize
+  ) {
+    self.commands = commands
+    self.evenOdd = evenOdd
+    self.fit = fit
+    self.alignX = alignX
+    self.alignY = alignY
+    self.viewBox = viewBox
+  }
+
+  init(_ args: [String: Any]) {
+    let raw = args["path"] as? [Any] ?? []
+    commands = raw.compactMap { ($0 as? NSNumber).map { CGFloat($0.doubleValue) } }
+    evenOdd = (args["fillRule"] as? String) == "evenOdd"
+    fit = args["fit"] as? String ?? "contain"
+    alignX = number(args["alignX"]) ?? 0
+    alignY = number(args["alignY"]) ?? 0
+    viewBox = CGSize(
+      width: number(args["viewBoxWidth"]) ?? 1,
+      height: number(args["viewBoxHeight"]) ?? 1)
+  }
+
+  func frame(in bounds: CGRect) -> CGRect? {
+    let w = viewBox.width, h = viewBox.height
+    guard w > 0, h > 0, bounds.width > 0, bounds.height > 0 else { return nil }
+    let fx = bounds.width / w, fy = bounds.height / h
+    var sx: CGFloat, sy: CGFloat
+    switch fit {
+    case "fill": sx = fx; sy = fy
+    case "cover": sx = max(fx, fy); sy = sx
+    case "fitWidth": sx = fx; sy = fx
+    case "fitHeight": sx = fy; sy = fy
+    case "none": sx = 1; sy = 1
+    case "scaleDown": sx = min(1, min(fx, fy)); sy = sx
+    default: sx = min(fx, fy); sy = sx
+    }
+    let size = CGSize(width: w * sx, height: h * sy)
+    return CGRect(
+      x: bounds.minX + (bounds.width - size.width) * (1 + alignX) / 2,
+      y: bounds.minY + (bounds.height - size.height) * (1 + alignY) / 2,
+      width: size.width,
+      height: size.height)
+  }
+
+  func cgPath(in bounds: CGRect) -> CGPath {
+    let path = CGMutablePath()
+    guard let frame = frame(in: bounds) else { return path }
+    func point(_ i: Int) -> CGPoint {
+      CGPoint(
+        x: frame.minX + commands[i] * frame.width,
+        y: frame.minY + commands[i + 1] * frame.height)
+    }
+    var i = 0
+    var open = false
+    while i < commands.count {
+      let op = Int(commands[i])
+      let count = [2, 2, 6, 4, 0][min(max(op, 0), 4)]
+      guard i + count < commands.count || (count == 0 && i < commands.count) else { break }
+      switch op {
+      case 0:
+        path.move(to: point(i + 1))
+        open = true
+      case 1 where open:
+        path.addLine(to: point(i + 1))
+      case 2 where open:
+        path.addCurve(to: point(i + 5), control1: point(i + 1), control2: point(i + 3))
+      case 3 where open:
+        path.addQuadCurve(to: point(i + 3), control: point(i + 1))
+      case 4 where open:
+        path.closeSubpath()
+      default:
+        break
+      }
+      i += 1 + count
+    }
+    return path
+  }
+
+  func windingPath(in bounds: CGRect) -> CGPath {
+    let path = cgPath(in: bounds)
+    guard evenOdd, !path.isEmpty else { return path }
+    if #available(macOS 13.0, *) { return path.normalized(using: .evenOdd) }
+    return path
+  }
+}
+
 struct LiquidGlassConfig: Equatable {
-  enum Shape: String { case capsule, roundedRect, rect }
+  enum Shape: String { case capsule, roundedRect, rect, path }
 
   var shape: Shape = .capsule
   var radius: CGFloat = 0
+  var path = LiquidGlassPathGeometry.empty
   var clear = false
   var opacity: CGFloat = 1
   var tint: NSColor?
@@ -99,6 +200,7 @@ struct LiquidGlassConfig: Equatable {
   init(_ args: [String: Any]) {
     shape = Shape(rawValue: args["shape"] as? String ?? "") ?? .capsule
     radius = number(args["radius"]) ?? 0
+    if shape == .path { path = LiquidGlassPathGeometry(args) }
     clear = (args["style"] as? String) == "clear"
     opacity = number(args["opacity"]) ?? 1
     tintOpacity = number(args["tintOpacity"]) ?? 0.3
@@ -128,7 +230,7 @@ struct LiquidGlassConfig: Equatable {
     switch shape {
     case .capsule: return maxRadius
     case .roundedRect: return min(radius, maxRadius)
-    case .rect: return 0
+    case .rect, .path: return 0
     }
   }
 }
@@ -187,9 +289,38 @@ class FlippedView: NSView {
   override var isFlipped: Bool { true }
 }
 
+#if compiler(>=6.2)
+  @available(macOS 26.0, *)
+  struct LiquidGlassPathShape: Shape {
+    var geometry: LiquidGlassPathGeometry
+
+    func path(in rect: CGRect) -> Path { Path(geometry.windingPath(in: rect)) }
+  }
+
+  @available(macOS 26.0, *)
+  struct LiquidGlassPathSurface: View {
+    var geometry: LiquidGlassPathGeometry
+    var clear: Bool
+    var tint: Color?
+
+    var body: some View {
+      Color.clear
+        .glassEffect(glass, in: LiquidGlassPathShape(geometry: geometry))
+        .ignoresSafeArea()
+    }
+
+    private var glass: Glass {
+      let base: Glass = clear ? .clear : .regular
+      guard let tint else { return base }
+      return base.tint(tint)
+    }
+  }
+#endif
+
 final class LiquidGlassView: FlippedView, LiquidGlassUpdatable {
   private let surface = LiquidGlassEffects.makeSurface()
   private var config: LiquidGlassConfig?
+  private var pathHost: NSView?
 
   override init(frame: NSRect) {
     super.init(frame: frame)
@@ -205,6 +336,14 @@ final class LiquidGlassView: FlippedView, LiquidGlassUpdatable {
 
   func update(_ args: [String: Any]) {
     config = LiquidGlassConfig(args)
+    if config?.shape == .path {
+      updatePathHost()
+    } else if pathHost != nil {
+      pathHost?.removeFromSuperview()
+      pathHost = nil
+      surface.isHidden = false
+      (surface as? NSVisualEffectView)?.maskImage = nil
+    }
     needsLayout = true
     layoutSurface()
   }
@@ -214,8 +353,58 @@ final class LiquidGlassView: FlippedView, LiquidGlassUpdatable {
     layoutSurface()
   }
 
+  private func updatePathHost() {
+    #if compiler(>=6.2)
+      if #available(macOS 26.0, *), let config {
+        let root = LiquidGlassPathSurface(
+          geometry: config.path,
+          clear: config.clear,
+          tint: config.tint.map { Color(nsColor: $0.withAlphaComponent(config.tintOpacity)) })
+        surface.isHidden = true
+        let host: NSHostingView<LiquidGlassPathSurface>
+        if let existing = pathHost as? NSHostingView<LiquidGlassPathSurface> {
+          host = existing
+          host.rootView = root
+        } else {
+          host = NSHostingView(rootView: root)
+          host.safeAreaRegions = []
+          host.frame = bounds
+          host.autoresizingMask = [.width, .height]
+          addSubview(host)
+          pathHost = host
+        }
+        host.appearance = config.appearance.flatMap(NSAppearance.init(named:))
+        host.alphaValue = config.opacity
+      }
+    #endif
+  }
+
+  private func pathMaskImage(_ geometry: LiquidGlassPathGeometry, size: NSSize) -> NSImage? {
+    guard size.width > 0, size.height > 0 else { return nil }
+    return NSImage(size: size, flipped: true) { rect in
+      guard let context = NSGraphicsContext.current?.cgContext else { return false }
+      context.addPath(geometry.cgPath(in: rect))
+      context.setFillColor(NSColor.black.cgColor)
+      context.fillPath(using: geometry.evenOdd ? .evenOdd : .winding)
+      return true
+    }
+  }
+
   private func layoutSurface() {
     guard let config else { return }
+    if config.shape == .path {
+      layer?.cornerRadius = 0
+      if let pathHost {
+        pathHost.frame = bounds
+        return
+      }
+      surface.frame = bounds
+      LiquidGlassEffects.apply(config, cornerRadius: 0, to: surface)
+      if let effect = surface as? NSVisualEffectView {
+        effect.maskImage = pathMaskImage(config.path, size: bounds.size)
+      }
+      return
+    }
     surface.frame = bounds
     let radius = config.cornerRadius(for: bounds.size)
     layer?.cornerRadius = radius

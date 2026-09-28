@@ -1,4 +1,5 @@
 import Flutter
+import SwiftUI
 import UIKit
 
 public class LiquidGlassPlugin: NSObject, FlutterPlugin {
@@ -102,11 +103,111 @@ private func number(_ value: Any?) -> CGFloat? {
   (value as? NSNumber).map { CGFloat($0.doubleValue) }
 }
 
+struct LiquidGlassPathGeometry: Equatable, Sendable {
+  static let empty = LiquidGlassPathGeometry(
+    commands: [], evenOdd: false, fit: "contain", alignX: 0, alignY: 0, viewBox: .zero)
+
+  var commands: [CGFloat]
+  var evenOdd: Bool
+  var fit: String
+  var alignX: CGFloat
+  var alignY: CGFloat
+  var viewBox: CGSize
+
+  init(
+    commands: [CGFloat], evenOdd: Bool, fit: String, alignX: CGFloat, alignY: CGFloat,
+    viewBox: CGSize
+  ) {
+    self.commands = commands
+    self.evenOdd = evenOdd
+    self.fit = fit
+    self.alignX = alignX
+    self.alignY = alignY
+    self.viewBox = viewBox
+  }
+
+  init(_ args: [String: Any]) {
+    let raw = args["path"] as? [Any] ?? []
+    commands = raw.compactMap { ($0 as? NSNumber).map { CGFloat($0.doubleValue) } }
+    evenOdd = (args["fillRule"] as? String) == "evenOdd"
+    fit = args["fit"] as? String ?? "contain"
+    alignX = number(args["alignX"]) ?? 0
+    alignY = number(args["alignY"]) ?? 0
+    viewBox = CGSize(
+      width: number(args["viewBoxWidth"]) ?? 1,
+      height: number(args["viewBoxHeight"]) ?? 1)
+  }
+
+  func frame(in bounds: CGRect) -> CGRect? {
+    let w = viewBox.width, h = viewBox.height
+    guard w > 0, h > 0, bounds.width > 0, bounds.height > 0 else { return nil }
+    let fx = bounds.width / w, fy = bounds.height / h
+    var sx: CGFloat, sy: CGFloat
+    switch fit {
+    case "fill": sx = fx; sy = fy
+    case "cover": sx = max(fx, fy); sy = sx
+    case "fitWidth": sx = fx; sy = fx
+    case "fitHeight": sx = fy; sy = fy
+    case "none": sx = 1; sy = 1
+    case "scaleDown": sx = min(1, min(fx, fy)); sy = sx
+    default: sx = min(fx, fy); sy = sx
+    }
+    let size = CGSize(width: w * sx, height: h * sy)
+    return CGRect(
+      x: bounds.minX + (bounds.width - size.width) * (1 + alignX) / 2,
+      y: bounds.minY + (bounds.height - size.height) * (1 + alignY) / 2,
+      width: size.width,
+      height: size.height)
+  }
+
+  func cgPath(in bounds: CGRect) -> CGPath {
+    let path = CGMutablePath()
+    guard let frame = frame(in: bounds) else { return path }
+    func point(_ i: Int) -> CGPoint {
+      CGPoint(
+        x: frame.minX + commands[i] * frame.width,
+        y: frame.minY + commands[i + 1] * frame.height)
+    }
+    var i = 0
+    var open = false
+    while i < commands.count {
+      let op = Int(commands[i])
+      let count = [2, 2, 6, 4, 0][min(max(op, 0), 4)]
+      guard i + count < commands.count || (count == 0 && i < commands.count) else { break }
+      switch op {
+      case 0:
+        path.move(to: point(i + 1))
+        open = true
+      case 1 where open:
+        path.addLine(to: point(i + 1))
+      case 2 where open:
+        path.addCurve(to: point(i + 5), control1: point(i + 1), control2: point(i + 3))
+      case 3 where open:
+        path.addQuadCurve(to: point(i + 3), control: point(i + 1))
+      case 4 where open:
+        path.closeSubpath()
+      default:
+        break
+      }
+      i += 1 + count
+    }
+    return path
+  }
+
+  func windingPath(in bounds: CGRect) -> CGPath {
+    let path = cgPath(in: bounds)
+    guard evenOdd, !path.isEmpty else { return path }
+    if #available(iOS 16.0, *) { return path.normalized(using: .evenOdd) }
+    return path
+  }
+}
+
 struct LiquidGlassConfig: Equatable {
-  enum Shape: String { case capsule, roundedRect, rect }
+  enum Shape: String { case capsule, roundedRect, rect, path }
 
   var shape: Shape = .capsule
   var radius: CGFloat = 0
+  var path = LiquidGlassPathGeometry.empty
   var clear = false
   var opacity: CGFloat = 1
   var tint: UIColor?
@@ -116,6 +217,7 @@ struct LiquidGlassConfig: Equatable {
   init(_ args: [String: Any]) {
     shape = Shape(rawValue: args["shape"] as? String ?? "") ?? .capsule
     radius = number(args["radius"]) ?? 0
+    if shape == .path { path = LiquidGlassPathGeometry(args) }
     clear = (args["style"] as? String) == "clear"
     opacity = number(args["opacity"]) ?? 1
     tintOpacity = number(args["tintOpacity"]) ?? 0.3
@@ -198,9 +300,46 @@ enum LiquidGlassEffects {
   }
 }
 
+#if compiler(>=6.2)
+  @available(iOS 26.0, *)
+  struct LiquidGlassPathShape: Shape {
+    var geometry: LiquidGlassPathGeometry
+
+    func path(in rect: CGRect) -> Path { Path(geometry.windingPath(in: rect)) }
+  }
+
+  @available(iOS 26.0, *)
+  struct LiquidGlassPathSurface: View {
+    var geometry: LiquidGlassPathGeometry
+    var clear: Bool
+    var tint: Color?
+
+    var body: some View {
+      Color.clear
+        .glassEffect(glass, in: LiquidGlassPathShape(geometry: geometry))
+        .ignoresSafeArea()
+    }
+
+    private var glass: Glass {
+      let base: Glass = clear ? .clear : .regular
+      guard let tint else { return base }
+      return base.tint(tint)
+    }
+  }
+#endif
+
+final class LiquidGlassPathMaskView: UIView {
+  override class var layerClass: AnyClass { CAShapeLayer.self }
+
+  var shapeLayer: CAShapeLayer { layer as! CAShapeLayer }
+}
+
 final class LiquidGlassView: UIView, LiquidGlassUpdatable {
   private var effectView = UIVisualEffectView(effect: nil)
   private var config: LiquidGlassConfig?
+  private var pathHost: UIViewController?
+  private var pathMask: LiquidGlassPathMaskView?
+  private let hostMask = CAShapeLayer()
 
   override init(frame: CGRect) {
     super.init(frame: frame)
@@ -216,6 +355,11 @@ final class LiquidGlassView: UIView, LiquidGlassUpdatable {
 
   func update(_ args: [String: Any]) {
     let new = LiquidGlassConfig(args)
+    if new.shape == .path {
+      updatePath(new)
+      return
+    }
+    leavePathMode()
     let old = config
     config = new
     effectView.alpha = new.opacity
@@ -239,15 +383,112 @@ final class LiquidGlassView: UIView, LiquidGlassUpdatable {
     setNeedsLayout()
   }
 
+  private func updatePath(_ new: LiquidGlassConfig) {
+    let old = config
+    config = new
+    LiquidGlassEffects.setCornerRadius(0, on: self)
+    #if compiler(>=6.2)
+      if #available(iOS 26.0, *) {
+        let surface = LiquidGlassPathSurface(
+          geometry: new.path,
+          clear: new.clear,
+          tint: new.tint.map { Color(uiColor: $0.withAlphaComponent(new.tintOpacity)) })
+        UIView.performWithoutAnimation {
+          effectView.effect = nil
+          effectView.isHidden = true
+          overrideUserInterfaceStyle = new.style
+          let host: UIHostingController<LiquidGlassPathSurface>
+          if let existing = pathHost as? UIHostingController<LiquidGlassPathSurface> {
+            host = existing
+            host.rootView = surface
+          } else {
+            host = UIHostingController(rootView: surface)
+            host.safeAreaRegions = []
+            host.view.backgroundColor = .clear
+            host.view.isOpaque = false
+            host.view.isUserInteractionEnabled = false
+            host.view.frame = bounds
+            host.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            hostMask.fillColor = UIColor.black.cgColor
+            host.view.layer.mask = hostMask
+            addSubview(host.view)
+            pathHost = host
+          }
+          applyHostMask(new.path)
+          host.view.overrideUserInterfaceStyle = new.style
+          host.view.alpha = new.opacity
+        }
+        setNeedsLayout()
+        return
+      }
+    #endif
+    let mask = pathMask ?? {
+      let view = LiquidGlassPathMaskView(frame: effectView.bounds)
+      view.shapeLayer.fillColor = UIColor.black.cgColor
+      pathMask = view
+      return view
+    }()
+    UIView.performWithoutAnimation {
+      effectView.isHidden = false
+      effectView.alpha = new.opacity
+      LiquidGlassEffects.setCornerRadius(0, on: effectView)
+      applyPathMask(mask, geometry: new.path)
+      if effectView.mask !== mask { effectView.mask = mask }
+      if !new.sameLook(as: old) {
+        overrideUserInterfaceStyle = new.style
+        LiquidGlassEffects.setEffect(new, previous: nil, on: effectView)
+      }
+    }
+    setNeedsLayout()
+  }
+
+  private func applyHostMask(_ geometry: LiquidGlassPathGeometry) {
+    guard let view = pathHost?.view else { return }
+    CATransaction.begin()
+    CATransaction.setDisableActions(true)
+    hostMask.frame = view.bounds
+    hostMask.fillRule = geometry.evenOdd ? .evenOdd : .nonZero
+    hostMask.path = geometry.cgPath(in: view.bounds)
+    CATransaction.commit()
+  }
+
+  private func applyPathMask(_ mask: LiquidGlassPathMaskView, geometry: LiquidGlassPathGeometry) {
+    CATransaction.begin()
+    CATransaction.setDisableActions(true)
+    mask.frame = effectView.bounds
+    mask.shapeLayer.fillRule = geometry.evenOdd ? .evenOdd : .nonZero
+    mask.shapeLayer.path = geometry.cgPath(in: mask.bounds)
+    CATransaction.commit()
+  }
+
+  private func leavePathMode() {
+    guard pathHost != nil || pathMask != nil else { return }
+    UIView.performWithoutAnimation {
+      pathHost?.view.layer.mask = nil
+      pathHost?.view.removeFromSuperview()
+      pathHost = nil
+      effectView.mask = nil
+      pathMask = nil
+      effectView.isHidden = false
+    }
+    config = nil
+  }
+
   override func layoutSubviews() {
     super.layoutSubviews()
     guard let config else { return }
+    if config.shape == .path {
+      pathHost?.view.frame = bounds
+      applyHostMask(config.path)
+      if let pathMask { applyPathMask(pathMask, geometry: config.path) }
+      return
+    }
     let maxRadius = min(bounds.width, bounds.height) / 2
     let radius: CGFloat
     switch config.shape {
     case .capsule: radius = maxRadius
     case .roundedRect: radius = min(config.radius, maxRadius)
-    case .rect: radius = 0
+    case .rect, .path: radius = 0
     }
     LiquidGlassEffects.setCornerRadius(radius, on: effectView)
     LiquidGlassEffects.setCornerRadius(radius, on: self)
