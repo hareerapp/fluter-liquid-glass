@@ -17,15 +17,16 @@ components.
 | iOS 15–25 / macOS 10.15–15 | Treated like Android: your widget as-is, or the optional frosted blur (no native views) |
 | Android, web, Windows, Linux | Installs and runs without errors; your widget as-is, or an optional frosted blur |
 
-> **New in 0.3.0:** a picture and a short example for every component
-> below. **0.2.x:** [`LiquidGlassSvg`](#liquidglasssvg--glass-in-the-shape-of-any-svg),
+> **New in 0.4.0:** buttons press and drag like native iOS 26: the glass
+> follows the finger and stretches toward it ([Buttons](#buttons)).
+> **0.3.0:** a picture and a short example for every component below. **0.2.x:** [`LiquidGlassSvg`](#liquidglasssvg--glass-in-the-shape-of-any-svg),
 > glass in the exact shape of any SVG, and older iOS / macOS behave like Android.
 
 ## Install
 
 ```yaml
 dependencies:
-  liquid_design: ^0.3.0
+  liquid_design: ^0.4.0
 ```
 
 ```dart
