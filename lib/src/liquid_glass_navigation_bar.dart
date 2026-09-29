@@ -4,17 +4,24 @@ import 'glass_selection_bar.dart';
 import 'liquid_glass_settings.dart';
 import 'liquid_glass_theme.dart';
 
+/// One tab of a [LiquidGlassNavigationBar].
 class LiquidGlassNavItem {
+  /// Creates a tab.
   const LiquidGlassNavItem({required this.icon, this.activeIcon, this.label});
 
+  /// Icon of the tab.
   final Widget icon;
 
+  /// Icon shown while the tab is selected.
   final Widget? activeIcon;
 
+  /// Text under the icon.
   final String? label;
 }
 
+/// An iOS 26 glass tab bar with a sliding, stretching selection.
 class LiquidGlassNavigationBar extends StatelessWidget {
+  /// Creates a navigation bar with at least two [items].
   const LiquidGlassNavigationBar({
     super.key,
     required this.items,
@@ -31,24 +38,37 @@ class LiquidGlassNavigationBar extends StatelessWidget {
   }) : assert(items.length >= 2),
        assert(currentIndex >= 0 && currentIndex < items.length);
 
+  /// The tabs.
   final List<LiquidGlassNavItem> items;
+
+  /// Index of the selected tab.
   final int currentIndex;
+
+  /// Called when a tab is chosen.
   final ValueChanged<int> onTap;
 
+  /// Colour of the selected tab.
   final Color? activeColor;
 
+  /// Colour of the other tabs.
   final Color? inactiveColor;
 
+  /// Height of the bar. 64 with labels, 56 without.
   final double? height;
 
+  /// Space between the bar edge and the selection.
   final double padding;
 
+  /// Glass settings for this widget. Falls back to the nearest [LiquidGlassTheme], then [LiquidGlassService].
   final LiquidGlassSettings? settings;
 
+  /// Shrinks the bar to the selected tab.
   final bool collapsed;
 
+  /// Called when a collapsed bar is tapped.
   final VoidCallback? onExpand;
 
+  /// Called when the selected tab is tapped again.
   final ValueChanged<int>? onReselect;
 
   @override
@@ -117,7 +137,9 @@ class LiquidGlassNavigationBar extends StatelessWidget {
   }
 }
 
+/// Reports when scrolling [child] should collapse a navigation bar.
 class LiquidGlassScrollCollapse extends StatefulWidget {
+  /// Creates a scroll listener for [child].
   const LiquidGlassScrollCollapse({
     super.key,
     required this.onChanged,
@@ -127,13 +149,19 @@ class LiquidGlassScrollCollapse extends StatefulWidget {
     this.settings,
   });
 
+  /// Called with true to collapse and false to expand.
   final ValueChanged<bool> onChanged;
+
+  /// The scrolling content.
   final Widget child;
 
+  /// The current collapsed state, when known.
   final bool? collapsed;
 
+  /// Glass settings for this widget. Falls back to the nearest [LiquidGlassTheme], then [LiquidGlassService].
   final LiquidGlassSettings? settings;
 
+  /// Distance to scroll before the state changes.
   final double threshold;
 
   @override

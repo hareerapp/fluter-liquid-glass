@@ -2,16 +2,28 @@ import 'package:flutter/widgets.dart';
 
 import 'liquid_glass_shape.dart';
 
+/// Glass material style.
 enum LiquidGlassStyle { regular, clear }
 
+/// Whether glass is light or dark.
+///
+/// `auto` follows the app theme, `system` follows the device.
 enum LiquidGlassBrightness { auto, system, light, dark }
 
+/// What platforms without native glass show.
+///
+/// `none` shows the child as-is, `frosted` draws Flutter glass.
 enum LiquidGlassFallback { none, frosted }
 
+/// Who draws glass on iOS and macOS.
+///
+/// `auto` uses Flutter glass inside scrolling content and native glass elsewhere.
 enum LiquidGlassRenderer { auto, native, flutter }
 
 @immutable
+/// Every glass setting in one immutable object.
 class LiquidGlassSettings {
+  /// Creates settings. Every value has an iOS-like default.
   const LiquidGlassSettings({
     this.enabled = true,
     this.style = LiquidGlassStyle.regular,
@@ -30,32 +42,46 @@ class LiquidGlassSettings {
        assert(tintOpacity >= 0 && tintOpacity <= 1),
        assert(interactionStrength >= 0);
 
+  /// Turns glass on or off.
   final bool enabled;
 
+  /// Regular or clear glass.
   final LiquidGlassStyle style;
 
+  /// How visible the glass material is, from 0 to 1.
   final double opacity;
 
+  /// Colour mixed into the glass.
   final Color? tintColor;
 
+  /// Strength of [tintColor], from 0 to 1.
   final double tintOpacity;
 
+  /// Press, drag and hover motion.
   final bool interactive;
 
+  /// Amount of motion. 0 is none, 1 matches iOS.
   final double interactionStrength;
 
+  /// Light or dark glass.
   final LiquidGlassBrightness brightness;
 
+  /// Shape used when none is given or detected.
   final LiquidGlassShape shape;
 
+  /// What platforms without native glass show.
   final LiquidGlassFallback fallback;
 
+  /// Blur of Flutter-drawn glass. 0 turns the blur off.
   final double fallbackBlurSigma;
 
+  /// Whether navigation bars shrink while scrolling down.
   final bool collapseOnScroll;
 
+  /// Native or Flutter-drawn glass on iOS and macOS.
   final LiquidGlassRenderer renderer;
 
+  /// A copy with the given values replaced. Use [clearTintColor] to remove the tint.
   LiquidGlassSettings copyWith({
     bool? enabled,
     LiquidGlassStyle? style,

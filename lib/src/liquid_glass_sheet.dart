@@ -5,7 +5,9 @@ import 'liquid_glass_button.dart';
 import 'liquid_glass_settings.dart';
 import 'liquid_glass_shape.dart';
 
+/// A glass panel for bottom sheets.
 class LiquidGlassSheet extends StatelessWidget {
+  /// Creates a sheet around [child].
   const LiquidGlassSheet({
     super.key,
     required this.child,
@@ -14,9 +16,16 @@ class LiquidGlassSheet extends StatelessWidget {
     this.settings,
   });
 
+  /// Content of the sheet.
   final Widget child;
+
+  /// Whether to show the drag handle.
   final bool showDragHandle;
+
+  /// Corner radius.
   final double radius;
+
+  /// Glass settings for this widget. Falls back to the nearest [LiquidGlassTheme], then [LiquidGlassService].
   final LiquidGlassSettings? settings;
 
   @override
@@ -48,6 +57,7 @@ class LiquidGlassSheet extends StatelessWidget {
   }
 }
 
+/// Shows a modal bottom sheet built by [builder] on a [LiquidGlassSheet].
 Future<T?> showLiquidGlassBottomSheet<T>({
   required BuildContext context,
   required WidgetBuilder builder,
@@ -86,7 +96,9 @@ Future<T?> showLiquidGlassBottomSheet<T>({
   );
 }
 
+/// An iOS 26 glass search field.
 class LiquidGlassSearchBar extends StatefulWidget {
+  /// Creates a search bar.
   const LiquidGlassSearchBar({
     super.key,
     this.controller,
@@ -100,14 +112,28 @@ class LiquidGlassSearchBar extends StatefulWidget {
     this.settings,
   });
 
+  /// Controls the text.
   final TextEditingController? controller;
+
+  /// Controls the focus.
   final FocusNode? focusNode;
+
+  /// Placeholder text.
   final String hintText;
+
+  /// Called when the text changes.
   final ValueChanged<String>? onChanged;
+
+  /// Called when the user submits.
   final ValueChanged<String>? onSubmitted;
 
+  /// Widget after the text field.
   final Widget? trailing;
+
+  /// Whether to focus on start.
   final bool autofocus;
+
+  /// Height of the field.
   final double height;
   final LiquidGlassSettings? settings;
 

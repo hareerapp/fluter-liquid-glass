@@ -7,9 +7,12 @@ import 'liquid_glass_settings.dart';
 import 'liquid_glass_shape.dart';
 import 'liquid_glass_theme.dart';
 
+/// Look of a [LiquidGlassButton]: clear glass, lightly tinted, or filled.
 enum LiquidGlassButtonStyle { glass, tinted, prominent }
 
+/// An iOS 26 glass button that grows, follows and stretches under the finger.
 class LiquidGlassButton extends StatelessWidget {
+  /// A button with a text or any [child].
   const LiquidGlassButton({
     super.key,
     required this.onPressed,
@@ -25,6 +28,7 @@ class LiquidGlassButton extends StatelessWidget {
     this.settings,
   }) : _circle = false;
 
+  /// A round button with an [icon].
   const LiquidGlassButton.icon({
     super.key,
     required this.onPressed,
@@ -42,21 +46,37 @@ class LiquidGlassButton extends StatelessWidget {
        shape = const LiquidGlassShape.circle(),
        _circle = true;
 
+  /// Called on tap. Null disables the button.
   final VoidCallback? onPressed;
+
+  /// Called on long press.
   final VoidCallback? onLongPress;
+
+  /// Content of the button.
   final Widget child;
+
+  /// Glass, tinted or prominent.
   final LiquidGlassButtonStyle style;
 
+  /// Accent colour for tinted and prominent buttons.
   final Color? color;
 
+  /// Colour of the text and icon.
   final Color? foregroundColor;
+
+  /// Space around [child].
   final EdgeInsetsGeometry padding;
 
+  /// Minimum width and height.
   final double minSize;
 
+  /// Outline. Capsule by default, circle for icon buttons.
   final LiquidGlassShape? shape;
 
+  /// Screen reader label.
   final String? semanticLabel;
+
+  /// Glass settings for this widget. Falls back to the nearest [LiquidGlassTheme], then [LiquidGlassService].
   final LiquidGlassSettings? settings;
   final bool _circle;
 

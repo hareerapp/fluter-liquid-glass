@@ -188,7 +188,9 @@ mixin _SpringMixin<T extends StatefulWidget> on TickerProviderStateMixin<T> {
   }
 }
 
+/// An iOS 26 switch whose thumb lifts into a glass lens while touched.
 class LiquidGlassSwitch extends StatefulWidget {
+  /// Creates a switch.
   const LiquidGlassSwitch({
     super.key,
     required this.value,
@@ -198,12 +200,19 @@ class LiquidGlassSwitch extends StatefulWidget {
     this.settings,
   });
 
+  /// Whether the switch is on.
   final bool value;
 
+  /// Called with the new value. Null disables the switch.
   final ValueChanged<bool>? onChanged;
 
+  /// Track colour when on.
   final Color? activeColor;
+
+  /// Screen reader label.
   final String? semanticLabel;
+
+  /// Glass settings for this widget. Falls back to the nearest [LiquidGlassTheme], then [LiquidGlassService].
   final LiquidGlassSettings? settings;
 
   @override
@@ -422,7 +431,9 @@ class _LiquidGlassSwitchState extends State<LiquidGlassSwitch>
   }
 }
 
+/// An iOS 26 slider whose thumb lifts into a glass lens while dragged.
 class LiquidGlassSlider extends StatefulWidget {
+  /// Creates a slider.
   const LiquidGlassSlider({
     super.key,
     required this.value,
@@ -438,18 +449,30 @@ class LiquidGlassSlider extends StatefulWidget {
   }) : assert(min < max),
        assert(value >= min && value <= max);
 
+  /// The current value.
   final double value;
 
+  /// Called while the value changes. Null disables the slider.
   final ValueChanged<double>? onChanged;
+
+  /// Smallest value.
   final double min;
+
+  /// Largest value.
   final double max;
 
+  /// Number of steps. Null for a continuous slider.
   final int? divisions;
+
+  /// Called when a drag starts.
   final ValueChanged<double>? onChangeStart;
+
+  /// Called when a drag ends.
   final ValueChanged<double>? onChangeEnd;
 
   final Color? activeColor;
 
+  /// Screen reader text for a value.
   final String Function(double value)? semanticFormatter;
   final LiquidGlassSettings? settings;
 

@@ -6,7 +6,9 @@ import 'liquid_glass_group.dart';
 import 'liquid_glass_settings.dart';
 import 'liquid_glass_shape.dart';
 
+/// An iOS 26 app bar with floating glass buttons and a scroll edge fade.
 class LiquidGlassAppBar extends StatefulWidget implements PreferredSizeWidget {
+  /// Creates an app bar.
   const LiquidGlassAppBar({
     super.key,
     this.leading,
@@ -22,21 +24,37 @@ class LiquidGlassAppBar extends StatefulWidget implements PreferredSizeWidget {
     this.settings,
   });
 
+  /// Widget before the title. A back button is added when needed.
   final Widget? leading;
+
+  /// The title.
   final Widget? title;
 
+  /// Buttons after the title. They share one glass capsule.
   final List<Widget>? actions;
+
+  /// Whether to add a back button.
   final bool automaticallyImplyLeading;
+
+  /// Whether the title is centred.
   final bool centerTitle;
 
+  /// Whether the title sits on its own glass.
   final bool titleInGlass;
 
+  /// Whether content fades under the bar while scrolling.
   final bool scrollEdgeEffect;
 
+  /// Colour of the scroll edge fade.
   final Color? edgeColor;
+
+  /// Height of the bar.
   final double toolbarHeight;
 
+  /// Whether the bar buttons share one native glass view.
   final bool groupGlass;
+
+  /// Glass settings for this widget. Falls back to the nearest [LiquidGlassTheme], then [LiquidGlassService].
   final LiquidGlassSettings? settings;
 
   @override
