@@ -14,7 +14,12 @@ import 'liquid_glass_shape.dart';
 import 'liquid_glass_theme.dart';
 import 'native_glass_view.dart';
 
+/// Wraps [child] in iOS 26 Liquid Glass.
+///
+/// On iOS and macOS 26 the glass is native. Elsewhere the child is shown as-is,
+/// or with a Flutter-drawn frosted glass when [LiquidGlassFallback.frosted] is set.
 class LiquidGlass extends StatefulWidget {
+  /// Creates Liquid Glass behind [child]. Values left null come from [settings].
   const LiquidGlass({
     super.key,
     required this.child,
@@ -36,28 +41,55 @@ class LiquidGlass extends StatefulWidget {
     this.rimWidth,
   });
 
+  /// The widget shown on the glass. It defines the size of the glass.
   final Widget child;
 
+  /// Outline of the glass. When null it is detected from [child], then taken from the settings.
   final LiquidGlassShape? shape;
 
+  /// Glass settings for this widget. Falls back to the nearest [LiquidGlassTheme], then [LiquidGlassService].
   final LiquidGlassSettings? settings;
 
+  /// Turns the glass off for this widget when false.
   final bool? enabled;
+
+  /// Regular or clear glass.
   final LiquidGlassStyle? style;
+
+  /// How visible the glass material is, from 0 to 1.
   final double? opacity;
+
+  /// Colour mixed into the glass.
   final Color? tintColor;
+
+  /// Strength of [tintColor], from 0 to 1.
   final double? tintOpacity;
+
+  /// Whether the glass grows, follows and stretches under the finger.
   final bool? interactive;
+
+  /// Amount of press and drag motion. 0 is none, 1 matches iOS.
   final double? interactionStrength;
+
+  /// Light or dark glass, or follow the app or system.
   final LiquidGlassBrightness? brightness;
+
+  /// What to show where native glass is not available.
   final LiquidGlassFallback? fallback;
+
+  /// Blur of the Flutter-drawn glass.
   final double? fallbackBlurSigma;
+
+  /// Native or Flutter-drawn glass on iOS and macOS.
   final LiquidGlassRenderer? renderer;
 
+  /// Whether this glass joins an enclosing [LiquidGlassGroup].
   final bool joinGroup;
 
+  /// Edge highlight colour of Flutter-drawn glass.
   final Color? rimColor;
 
+  /// Edge highlight width of Flutter-drawn glass.
   final double? rimWidth;
 
   @override
@@ -698,7 +730,9 @@ class _ShapeClipper extends CustomClipper<RRect> {
   bool shouldReclip(_ShapeClipper old) => old.shape != shape;
 }
 
+/// Adds [liquidGlass] to every widget.
 extension LiquidGlassExtension on Widget {
+  /// Wraps this widget in [LiquidGlass] with the same parameters.
   Widget liquidGlass({
     Key? key,
     LiquidGlassShape? shape,

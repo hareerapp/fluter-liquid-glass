@@ -10,6 +10,8 @@ import 'svg/svg_path_parser.dart';
 enum _ShapeKind { capsule, roundedRect, rect, path }
 
 @immutable
+/// The outline of a glass surface: capsule, circle, rounded rectangle,
+/// rectangle, or any path or SVG.
 class LiquidGlassShape {
   const LiquidGlassShape._(
     this._kind,
@@ -19,15 +21,20 @@ class LiquidGlassShape {
     this.alignment = Alignment.center,
   ]);
 
+  /// A pill shape with fully rounded ends. The default.
   const LiquidGlassShape.capsule() : this._(_ShapeKind.capsule, 0);
 
+  /// A circle, for square children.
   const LiquidGlassShape.circle() : this._(_ShapeKind.capsule, 0);
 
+  /// A rectangle with corners of [radius].
   const LiquidGlassShape.roundedRect(double radius)
     : this._(_ShapeKind.roundedRect, radius);
 
+  /// A rectangle with square corners.
   const LiquidGlassShape.rect() : this._(_ShapeKind.rect, 0);
 
+  /// A shape that follows [path], scaled into the box with [fit] and [alignment].
   factory LiquidGlassShape.path(
     Path path, {
     Rect? viewBox,
@@ -46,6 +53,9 @@ class LiquidGlassShape {
     return LiquidGlassShape._(_ShapeKind.path, 0, geometry, fit, alignment);
   }
 
+  /// A shape that follows an SVG document or raw path data.
+  ///
+  /// Stroke-only artwork is turned into a filled outline when [strokeToFill] is true.
   factory LiquidGlassShape.svg(
     String svgOrPathData, {
     Rect? viewBox,
@@ -71,27 +81,36 @@ class LiquidGlassShape {
 
   final _ShapeKind _kind;
 
+  /// Corner radius of [LiquidGlassShape.roundedRect].
   final double radius;
 
   final _PathGeometry? _geometry;
 
+  /// How a path or SVG shape fits its box.
   final BoxFit fit;
 
+  /// Where a path or SVG shape sits in its box.
   final Alignment alignment;
 
+  /// Whether this is a capsule or circle.
   bool get isCapsule => _kind == _ShapeKind.capsule;
 
+  /// Whether this shape comes from a path or SVG.
   bool get isPath => _kind == _ShapeKind.path;
 
+  /// The source coordinate box of a path or SVG shape.
   Rect get viewBox => _geometry?.viewBox ?? Rect.zero;
 
+  /// Width divided by height of [viewBox].
   double get aspectRatio {
     final box = viewBox;
     return box.height <= 0 || box.width <= 0 ? 1 : box.width / box.height;
   }
 
+  /// Fill rule of a path or SVG shape.
   PathFillType get fillType => _geometry?.fillType ?? PathFillType.nonZero;
 
+  /// The outline scaled into a box of [size].
   Path resolvePath(Size size, {BoxFit? fit, Alignment? alignment}) {
     final geometry = _geometry;
     if (geometry == null) {
@@ -107,10 +126,12 @@ class LiquidGlassShape {
       ..fillType = geometry.fillType;
   }
 
+  /// The outline placed in [rect].
   Path toPath(Rect rect) => isPath
       ? resolvePath(rect.size).shift(rect.topLeft)
       : (Path()..addRRect(toRRect(rect)));
 
+  /// Corner radius used for a box of [size].
   double resolveRadius(Size size) {
     final maxRadius = math.min(size.width, size.height) / 2;
     return switch (_kind) {
@@ -120,9 +141,11 @@ class LiquidGlassShape {
     };
   }
 
+  /// The rounded rectangle for [rect].
   RRect toRRect(Rect rect) =>
       RRect.fromRectAndRadius(rect, Radius.circular(resolveRadius(rect.size)));
 
+  /// The shape encoded for the native side.
   Map<String, Object> toMap() {
     final geometry = _geometry;
     if (geometry == null) return {'shape': _kind.name, 'radius': radius};
@@ -141,6 +164,7 @@ class LiquidGlassShape {
     };
   }
 
+  /// Reads a shape from a child's decoration or clip, or returns null.
   static LiquidGlassShape? detect(Widget child) {
     child = _unwrap(child);
     Decoration? decoration;

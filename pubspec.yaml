@@ -1,6 +1,6 @@
 name: liquid_design
 description: "iOS 26 Liquid Glass for any Flutter widget. Native glass on iOS; safe on Android, web and desktop."
-version: 0.4.0
+version: 0.4.1
 homepage: https://github.com/hareerapp/fluter-liquid-glass
 repository: https://github.com/hareerapp/fluter-liquid-glass
 issue_tracker: https://github.com/hareerapp/fluter-liquid-glass/issues
@@ -38,6 +38,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:
@@ -47,7 +49,16 @@ dev_dependencies:
 flutter:
   plugin:
     platforms:
+      android:
+        dartPluginClass: LiquidGlassDartPlugin
       ios:
         pluginClass: LiquidGlassPlugin
+      linux:
+        dartPluginClass: LiquidGlassDartPlugin
       macos:
         pluginClass: LiquidGlassPlugin
+      web:
+        pluginClass: LiquidGlassWebPlugin
+        fileName: src/liquid_glass_web_plugin.dart
+      windows:
+        dartPluginClass: LiquidGlassDartPlugin

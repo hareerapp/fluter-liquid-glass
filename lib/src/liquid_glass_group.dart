@@ -11,7 +11,10 @@ import 'liquid_glass_settings.dart';
 import 'liquid_glass_shape.dart';
 import 'liquid_glass_theme.dart';
 
+/// Draws every glass inside [child] with one native container, so nearby
+/// shapes melt together and fewer native views are created.
 class LiquidGlassGroup extends StatefulWidget {
+  /// Creates a group.
   const LiquidGlassGroup({
     super.key,
     this.spacing = 20,
@@ -19,10 +22,13 @@ class LiquidGlassGroup extends StatefulWidget {
     required this.child,
   });
 
+  /// Distance under which shapes melt together.
   final double spacing;
 
+  /// How far glass may grow past the group bounds.
   final double overflow;
 
+  /// Content with glass widgets.
   final Widget child;
 
   static GlassGroupHandle? maybeOf(BuildContext context) {

@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'glass_selection_bar.dart';
 import 'liquid_glass_settings.dart';
 
+/// An iOS 26 segmented control whose selection lifts into a glass lens.
 class LiquidGlassSegmentedControl<T> extends StatelessWidget {
+  /// Creates a segmented control.
   const LiquidGlassSegmentedControl({
     super.key,
     required this.children,
@@ -17,18 +19,31 @@ class LiquidGlassSegmentedControl<T> extends StatelessWidget {
     this.settings,
   }) : assert(children.length >= 2);
 
+  /// The segments by value.
   final Map<T, Widget> children;
+
+  /// The selected value.
   final T value;
+
+  /// Called when a segment is chosen.
   final ValueChanged<T> onValueChanged;
+
+  /// Height of the control.
   final double height;
+
+  /// Space between the edge and the selection.
   final double padding;
 
+  /// Colour of the selected segment.
   final Color? activeColor;
 
+  /// Colour of the other segments.
   final Color? inactiveColor;
 
+  /// Screen reader labels for the segments.
   final List<String>? semanticLabels;
 
+  /// Glass settings for this widget. Falls back to the nearest [LiquidGlassTheme], then [LiquidGlassService].
   final LiquidGlassSettings? settings;
 
   @override

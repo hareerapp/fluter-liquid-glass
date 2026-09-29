@@ -12,7 +12,12 @@ import 'svg/stroke_outliner.dart';
 import 'svg/svg_document_parser.dart';
 import 'svg/svg_fit.dart';
 
+/// Liquid Glass in the exact shape of an SVG, such as a logo.
+///
+/// Native glass on iOS and macOS 26. Elsewhere the plain SVG is drawn, or
+/// Flutter glass with [LiquidGlassFallback.frosted].
 class LiquidGlassSvg extends StatelessWidget {
+  /// Glass from an SVG document or raw path data in [svg].
   const LiquidGlassSvg({
     super.key,
     required String this.svg,
@@ -34,6 +39,7 @@ class LiquidGlassSvg extends StatelessWidget {
   }) : assetName = null,
        bundle = null;
 
+  /// Glass from an SVG asset. The file is loaded once and cached.
   const LiquidGlassSvg.asset(
     String this.assetName, {
     super.key,
@@ -55,30 +61,67 @@ class LiquidGlassSvg extends StatelessWidget {
     this.child,
   }) : svg = null;
 
+  /// SVG document or path data.
   final String? svg;
+
+  /// Asset path of the SVG.
   final String? assetName;
+
+  /// Bundle to load [assetName] from.
   final AssetBundle? bundle;
+
+  /// Width. When only one side is given the other follows the SVG aspect ratio.
   final double? width;
+
+  /// Height. When only one side is given the other follows the SVG aspect ratio.
   final double? height;
+
+  /// How the artwork fits the box.
   final BoxFit fit;
+
+  /// Where the artwork sits in the box.
   final Alignment alignment;
+
+  /// Paints the plain SVG in one colour.
   final Color? color;
+
+  /// Colour mixed into the glass.
   final Color? tintColor;
+
+  /// Strength of [tintColor].
   final double? tintOpacity;
+
+  /// Edge highlight colour of Flutter-drawn glass.
   final Color? rimColor;
+
+  /// Edge highlight width of Flutter-drawn glass.
   final double rimWidth;
+
+  /// Turns stroke-only artwork into a filled outline.
   final bool strokeToFill;
+
+  /// Glass settings for this widget. Falls back to the nearest [LiquidGlassTheme], then [LiquidGlassService].
   final LiquidGlassSettings? settings;
+
+  /// Whether the glass follows and stretches under the finger.
   final bool interactive;
+
+  /// Called for taps inside the outline.
   final VoidCallback? onTap;
+
+  /// Screen reader label.
   final String? semanticLabel;
+
+  /// Content drawn inside the outline.
   final Widget? child;
 
+  /// Whether glass or the plain SVG is shown with [settings].
   static bool usesGlass(LiquidGlassSettings settings) =>
       settings.enabled &&
       (LiquidGlassService.isNativePlatform ||
           settings.fallback == LiquidGlassFallback.frosted);
 
+  /// Loads an SVG asset ahead of time.
   static Future<void> precache(String assetName, {AssetBundle? bundle}) =>
       _SvgAssetState._load(bundle ?? rootBundle, assetName);
 

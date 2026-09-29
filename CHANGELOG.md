@@ -1,3 +1,13 @@
+## 0.4.1 — API docs and all platforms on pub.dev
+
+- API documentation for every public class, constructor and property
+  (hover docs in the IDE and on the pub.dev API page).
+- pub.dev now lists all six platforms: Android, iOS, macOS, web, Windows
+  and Linux. Nothing changes at runtime: platforms without native glass
+  still show the widget as-is, or Flutter glass with `fallback: frosted`.
+- The OS version check no longer imports `dart:io` directly, so the package
+  is web-compatible.
+
 ## 0.4.0 — Native press and drag for glass buttons
 
 - Glass buttons now feel like iOS 26: pressing grows the glass, dragging
